@@ -15,7 +15,6 @@ pub fn without_defaults(generics: &syn::Generics) -> syn::Generics {
             .iter()
             .map(|param| match param {
                 syn::GenericParam::Type(param) => syn::GenericParam::Type(syn::TypeParam {
-                    eq_token: None,
                     default: None,
                     ..param.clone()
                 }),
@@ -153,7 +152,7 @@ pub fn with_bound(
             match ty {
                 #![cfg_attr(all(test, exhaustive), deny(non_exhaustive_omitted_patterns))]
                 syn::Type::Array(ty) => self.visit_type(&ty.elem),
-                syn::Type::BareFn(ty) => {
+                syn::Type::FnPtr(ty) => {
                     for arg in &ty.inputs {
                         self.visit_type(&arg.ty);
                     }
@@ -216,7 +215,7 @@ pub fn with_bound(
                 }
                 syn::PathArguments::Parenthesized(arguments) => {
                     for argument in &arguments.inputs {
-                        self.visit_type(argument);
+                        self.visit_type(&argument.ty);
                     }
                     self.visit_return_type(&arguments.output);
                 }
@@ -287,6 +286,7 @@ pub fn with_bound(
         bound: &syn::Path,
     ) -> syn::WherePredicate {
         syn::WherePredicate::Type(syn::PredicateType {
+            attrs: Vec::new(),
             lifetimes: None,
             // the type parameter that is being bounded e.g. T
             bounded_ty: syn::Type::Path(bounded_ty),
@@ -296,8 +296,9 @@ pub fn with_bound(
                 let mut punct = Punctuated::new();
                 punct.push(syn::TypeParamBound::Trait(syn::TraitBound {
                     paren_token: None,
-                    modifier: syn::TraitBoundModifier::None,
                     lifetimes: None,
+                    modifiers: syn::TraitBoundModifiers::default(),
+                    maybe: None,
                     path: bound.clone(),
                 }));
                 punct
@@ -313,6 +314,7 @@ pub fn with_bound(
             continue;
         }
         let bounded_ty = syn::TypePath {
+            attrs: Vec::new(),
             qself: None,
             path: id.clone().into(),
         };
@@ -334,6 +336,7 @@ pub fn with_self_bound(
         .make_where_clause()
         .predicates
         .push(syn::WherePredicate::Type(syn::PredicateType {
+            attrs: Vec::new(),
             lifetimes: None,
             // the type that is being bounded e.g. MyStruct<'a, T>
             bounded_ty: type_of_item(cont),
@@ -341,8 +344,9 @@ pub fn with_self_bound(
             // the bound e.g. Default
             bounds: vec![syn::TypeParamBound::Trait(syn::TraitBound {
                 paren_token: None,
-                modifier: syn::TraitBoundModifier::None,
                 lifetimes: None,
+                modifiers: syn::TraitBoundModifiers::default(),
+                maybe: None,
                 path: bound.clone(),
             })]
             .into_iter()
@@ -386,6 +390,7 @@ pub fn with_lifetime_bound(generics: &syn::Generics, lifetime: &str) -> syn::Gen
 
 fn type_of_item(cont: &Container) -> syn::Type {
     syn::Type::Path(syn::TypePath {
+        attrs: Vec::new(),
         qself: None,
         path: syn::Path {
             leading_colon: None,
@@ -402,6 +407,7 @@ fn type_of_item(cont: &Container) -> syn::Type {
                             .map(|param| match param {
                                 syn::GenericParam::Type(param) => {
                                     syn::GenericArgument::Type(syn::Type::Path(syn::TypePath {
+                                        attrs: Vec::new(),
                                         qself: None,
                                         path: param.ident.clone().into(),
                                     }))

@@ -1785,7 +1785,7 @@ fn collect_lifetimes(ty: &syn::Type, out: &mut BTreeSet<syn::Lifetime>) {
         syn::Type::Macro(ty) => {
             collect_lifetimes_from_tokens(ty.mac.tokens.clone(), out);
         }
-        syn::Type::BareFn(_)
+        syn::Type::FnPtr(_)
         | syn::Type::Never(_)
         | syn::Type::TraitObject(_)
         | syn::Type::ImplTrait(_)
