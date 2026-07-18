@@ -107,7 +107,7 @@ jobs:
       - run: |
           sed -i 's/proc-macro2 = { workspace = true/proc-macro2 = { version = "1"/' serde_derive*/Cargo.toml
           sed -i 's/quote = { workspace = true/quote = { version = "1"/' serde_derive*/Cargo.toml
-          sed -i 's/syn = { workspace = true/syn = { version = "2"/' serde_derive*/Cargo.toml
+          sed -i 's/syn = { workspace = true/syn = { version = "3"/' serde_derive*/Cargo.toml
       - run: cd serde && cargo check --no-default-features
       - run: cd serde && cargo check
       - run: cd serde_derive && cargo check
